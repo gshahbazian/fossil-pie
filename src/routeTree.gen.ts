@@ -10,11 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiYahooRouteImport } from './routes/api.yahoo'
 import { Route as ApiAuthRouteImport } from './routes/api.auth'
+import { Route as ApiAuthRefreshRouteImport } from './routes/api.auth.refresh'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYahooRoute = ApiYahooRouteImport.update({
+  id: '/api/yahoo',
+  path: '/api/yahoo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthRoute = ApiAuthRouteImport.update({
@@ -22,31 +29,43 @@ const ApiAuthRoute = ApiAuthRouteImport.update({
   path: '/api/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthRefreshRoute = ApiAuthRefreshRouteImport.update({
+  id: '/refresh',
+  path: '/refresh',
+  getParentRoute: () => ApiAuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api/auth': typeof ApiAuthRoute
+  '/api/auth': typeof ApiAuthRouteWithChildren
+  '/api/yahoo': typeof ApiYahooRoute
+  '/api/auth/refresh': typeof ApiAuthRefreshRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api/auth': typeof ApiAuthRoute
+  '/api/auth': typeof ApiAuthRouteWithChildren
+  '/api/yahoo': typeof ApiYahooRoute
+  '/api/auth/refresh': typeof ApiAuthRefreshRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/api/auth': typeof ApiAuthRoute
+  '/api/auth': typeof ApiAuthRouteWithChildren
+  '/api/yahoo': typeof ApiYahooRoute
+  '/api/auth/refresh': typeof ApiAuthRefreshRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/auth'
+  fullPaths: '/' | '/api/auth' | '/api/yahoo' | '/api/auth/refresh'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/auth'
-  id: '__root__' | '/' | '/api/auth'
+  to: '/' | '/api/auth' | '/api/yahoo' | '/api/auth/refresh'
+  id: '__root__' | '/' | '/api/auth' | '/api/yahoo' | '/api/auth/refresh'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApiAuthRoute: typeof ApiAuthRoute
+  ApiAuthRoute: typeof ApiAuthRouteWithChildren
+  ApiYahooRoute: typeof ApiYahooRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +77,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/yahoo': {
+      id: '/api/yahoo'
+      path: '/api/yahoo'
+      fullPath: '/api/yahoo'
+      preLoaderRoute: typeof ApiYahooRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth': {
       id: '/api/auth'
       path: '/api/auth'
@@ -65,12 +91,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/refresh': {
+      id: '/api/auth/refresh'
+      path: '/refresh'
+      fullPath: '/api/auth/refresh'
+      preLoaderRoute: typeof ApiAuthRefreshRouteImport
+      parentRoute: typeof ApiAuthRoute
+    }
   }
 }
 
+interface ApiAuthRouteChildren {
+  ApiAuthRefreshRoute: typeof ApiAuthRefreshRoute
+}
+
+const ApiAuthRouteChildren: ApiAuthRouteChildren = {
+  ApiAuthRefreshRoute: ApiAuthRefreshRoute,
+}
+
+const ApiAuthRouteWithChildren =
+  ApiAuthRoute._addFileChildren(ApiAuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApiAuthRoute: ApiAuthRoute,
+  ApiAuthRoute: ApiAuthRouteWithChildren,
+  ApiYahooRoute: ApiYahooRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
